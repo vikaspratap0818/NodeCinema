@@ -2,9 +2,10 @@
 
 A modern, full-stack Movie Application built with the MERN stack (MongoDB, Express, React, Node.js). The application allows users to discover trending movies and TV shows, search for specific titles, view detailed information including trailers, and save their favorite content to a personal "My List". It features a sleek glassmorphic UI, mobile responsiveness, and a fully functional Admin dashboard for managing custom movies and platform users.
 
-![Project Screenshot](https://via.placeholder.com/800x400?text=FullStack+Movie+App)
 
-## ✨ Features
+<img width="1858" height="913" alt="image" src="https://github.com/user-attachments/assets/a6e7830a-d909-4532-8a90-85821c0a638e" />
+
+##  Features
 
 - **User Authentication:** Secure JWT-based registration, login, and profile management.
 - **Movie Discovery:** Browse popular, trending, and top-rated movies across categories.
@@ -15,7 +16,7 @@ A modern, full-stack Movie Application built with the MERN stack (MongoDB, Expre
 - **Responsive UI:** A "glassmorphic", dark-mode interface optimized for both desktop and mobile devices.
 - **Trailers:** Watch YouTube trailers directly within the movie application.
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 **Frontend:**
 - React.js (Vite)
@@ -31,7 +32,7 @@ A modern, full-stack Movie Application built with the MERN stack (MongoDB, Expre
 - JSON Web Tokens (JWT) & bcryptjs (Authentication)
 - WatchMode API (Movie Data Integration)
 
-## 🚀 Installation & Setup
+##  Installation & Setup
 
 ### Prerequisites
 - Node.js (v16+ recommended)
@@ -73,7 +74,7 @@ npm start
 ```
 *(The server will run on `http://localhost:5000` and serve the static built React files)*
 
-## 📂 Project Structure
+##  Project Structure
 
 ```
 ├── client/                 # React Frontend
@@ -96,5 +97,5 @@ npm start
 └── README.md
 ```
 
-## 📜 License
+##  License
 This project is open-source and available under the [MIT License](LICENSE).
