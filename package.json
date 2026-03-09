@@ -1,0 +1,13 @@
+{
+  "name": "fullstack-movie-app",
+  "version": "1.0.0",
+  "description": "Root configuration for NodeCinema",
+  "scripts": {
+    "start": "npm start --prefix server",
+    "build": "npm install --prefix server && npm install --prefix client && npm run build --prefix client",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,55 @@
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2rem;
+  width: 100%;
+}
+
+.movie-card-skeleton {
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-info {
+  margin-top: 1rem;
+  padding: 0 0.5rem;
+}
+
+.movie-detail-skeleton {
+  position: relative;
+  padding-top: 50vh !important; /* Push content down over backdrop */
+  padding-bottom: 4rem;
+}
+
+.mds-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60vh;
+  z-index: -1;
+}
+
+.mds-content {
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
+}
+
+.mds-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .movie-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+  
+  .mds-content {
+    flex-direction: column;
+    align-items: center;
+  }
+}

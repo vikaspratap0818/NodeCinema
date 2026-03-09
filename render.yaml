@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: node-cinema
+    env: node
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        value: # Generate on MongoDB Atlas
+      - key: JWT_SECRET
+        value: # Set to a secure random string
+      - key: TMDB_API_KEY
+        value: # Optional: your TMDB key 

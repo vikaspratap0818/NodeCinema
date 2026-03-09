@@ -1,0 +1,163 @@
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { Play, Info, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import watchmodeApi from '../services/watchmodeApi';
+import { fetchCustomMovies } from '../features/movieSlice';
+import CategoryRow from '../components/movie/CategoryRow';
+import TrailerPlayer from '../components/movie/TrailerPlayer';
+import './Home.css';
+
+const Home = () => {
+  const dispatch = useDispatch();
+  const { customMovies, loading: customLoading } = useSelector((state) => state.movies);
+
+  const [trending, setTrending] = useState([]);
+  const [popular, setPopular] = useState([]);
+  const [topRated, setTopRated] = useState([]);
+  const [tvShows, setTvShows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Hero section movie
+  const [heroMovie, setHeroMovie] = useState(null);
+  
+  // Centralized floating trailer modal state
+  const [activeTrailerMovie, setActiveTrailerMovie] = useState(null);
+
+  useEffect(() => {
+    dispatch(fetchCustomMovies());
+
+    const fetchWatchmodeData = async () => {
+      setLoading(true);
+      try {
+        const [trendingRes, popularRes, topRatedRes, tvRes] = await Promise.all([
+          watchmodeApi.get('/autocomplete-search/', { params: { search_value: 'Marvel', search_type: 1 } }),
+          watchmodeApi.get('/autocomplete-search/', { params: { search_value: 'Batman', search_type: 1 } }),
+          watchmodeApi.get('/autocomplete-search/', { params: { search_value: 'Harry Potter', search_type: 1 } }),
+          watchmodeApi.get('/autocomplete-search/', { params: { search_value: 'Star Wars', search_type: 1 } })
+        ]);
+
+        const trendingData = trendingRes.data.results || [];
+        setTrending(trendingData);
+        setPopular(popularRes.data.results || []);
+        setTopRated(topRatedRes.data.results || []);
+        setTvShows(tvRes.data.results || []);
+
+        // Pick a random trending movie for the Hero section
+        if (trendingData.length > 0) {
+          const randomHero = trendingData[Math.floor(Math.random() * trendingData.length)];
+          setHeroMovie(randomHero);
+        }
+
+      } catch (error) {
+        console.error('Error fetching from Watchmode:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWatchmodeData();
+  }, [dispatch]);
+
+  const truncateString = (str, num) => {
+    if (str?.length > num) {
+      return str.slice(0, num) + '...';
+    } else {
+      return str;
+    }
+  };
+
+  return (
+    <div className="home-page">
+      {/* Hero Section */}
+      <div className="hero">
+        {heroMovie ? (
+          <>
+            <div className="hero-backdrop">
+              <img 
+                src={heroMovie.image_url ? heroMovie.image_url.replace('w185', 'original') : "https://via.placeholder.com/1200x500"} 
+                alt={heroMovie.name} 
+              />
+              <div className="hero-gradient"></div>
+            </div>
+            
+            <div className="container hero-content">
+              <motion.div 
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+                className="hero-info"
+              >
+                <h1 className="hero-title">{heroMovie.name}</h1>
+                <p className="hero-overview">
+                  Featured Movie - See more details to read the full plot.
+                </p>
+                <div className="hero-buttons">
+                  <Link to={`/movie/${heroMovie.id}`} className="btn-secondary">
+                    <Info size={20} /> More Info
+                  </Link>
+                </div>
+              </motion.div>
+            </div>
+          </>
+        ) : (
+           <div className="hero-placeholder skeleton"></div>
+        )}
+      </div>
+
+      <div className="container movie-sections">
+        {/* Custom Admin Movies from Backend */}
+        {customMovies && customMovies.length > 0 && (
+           <CategoryRow 
+              title="Featured Originals" 
+              movies={customMovies} 
+              loading={customLoading} 
+              isCustom={true} 
+              onSelectMovie={setActiveTrailerMovie}
+           />
+        )}
+        
+        {/* Watchmode Rows */}
+        <CategoryRow title="Movies" movies={trending} loading={loading} onSelectMovie={setActiveTrailerMovie} />
+        <CategoryRow title="More Movies" movies={popular} loading={loading} onSelectMovie={setActiveTrailerMovie} />
+        <CategoryRow title="Fantasy" movies={topRated} loading={loading} onSelectMovie={setActiveTrailerMovie} />
+        <CategoryRow title="Sci-Fi" movies={tvShows} loading={loading} onSelectMovie={setActiveTrailerMovie} />
+      </div>
+
+      {/* Floating Trailer Modal */}
+      {activeTrailerMovie && (
+        <div className="floating-trailer-modal">
+          <div className="trailer-modal-backdrop" onClick={() => setActiveTrailerMovie(null)}></div>
+          <div className="trailer-modal-content">
+            <button className="trailer-close-btn" onClick={() => setActiveTrailerMovie(null)}>
+              <X size={30} />
+            </button>
+            <div className="trailer-modal-body">
+               <div className="trailer-modal-info">
+                  <h2>{activeTrailerMovie.name || activeTrailerMovie.title}</h2>
+                  <p className="trailer-modal-overview">
+                    {activeTrailerMovie.plot_overview || activeTrailerMovie.description || "Loading description..."}
+                  </p>
+                  <button 
+                    className="btn-secondary" 
+                    onClick={() => window.location.href = `/movie/${activeTrailerMovie.id || activeTrailerMovie._id}${(activeTrailerMovie.mediaType === 'custom' || activeTrailerMovie.posterImageUrl) ? '?custom=true' : ''}`}
+                  >
+                    More Info
+                  </button>
+               </div>
+               <div className="trailer-modal-video">
+                  <TrailerPlayer 
+                     movie={activeTrailerMovie} 
+                     isCustom={!!activeTrailerMovie.posterImageUrl} 
+                  />
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Home;
