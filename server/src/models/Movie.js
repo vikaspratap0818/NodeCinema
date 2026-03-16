@@ -37,9 +37,14 @@ const movieSchema = new mongoose.Schema({
     unique: true,
     sparse: true
   },
+  source: {
+    type: String,
+    enum: ['admin', 'imported'],
+    default: 'admin'
+  },
   addedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Reference to the admin who added the movie
+    ref: 'User',
     required: true
   }
 }, {

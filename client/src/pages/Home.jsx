@@ -28,7 +28,7 @@ const Home = () => {
   useEffect(() => {
     dispatch(fetchCustomMovies());
 
-    const fetchWatchmodeData = async () => {
+    const fetchTmdbData = async () => {
       setLoading(true);
       try {
         const [trendingRes, popularRes, topRatedRes, tvRes] = await Promise.all([
@@ -51,13 +51,13 @@ const Home = () => {
         }
 
       } catch (error) {
-        console.error('Error fetching from Watchmode:', error);
+        console.error('Error fetching from TMDB:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchWatchmodeData();
+    fetchTmdbData();
   }, [dispatch]);
 
   const truncateString = (str, num) => {
@@ -91,7 +91,7 @@ const Home = () => {
               >
                 <h1 className="hero-title">{heroMovie.title || heroMovie.name}</h1>
                 <p className="hero-overview">
-                  Featured Movie - See more details to read the full plot.
+                  {heroMovie.overview ? heroMovie.overview.substring(0, 200) + '...' : 'Discover this trending movie now.'}
                 </p>
                 <div className="hero-buttons">
                   <Link to={`/movie/${heroMovie.id}`} className="btn-secondary">
@@ -118,11 +118,11 @@ const Home = () => {
            />
         )}
         
-        {/* Watchmode Rows */}
-        <CategoryRow title="Movies" movies={trending} loading={loading} onSelectMovie={setActiveTrailerMovie} />
-        <CategoryRow title="More Movies" movies={popular} loading={loading} onSelectMovie={setActiveTrailerMovie} />
-        <CategoryRow title="Fantasy" movies={topRated} loading={loading} onSelectMovie={setActiveTrailerMovie} />
-        <CategoryRow title="Sci-Fi" movies={tvShows} loading={loading} onSelectMovie={setActiveTrailerMovie} />
+        {/* TMDB Rows */}
+        <CategoryRow title="🔥 Trending Now" movies={trending} loading={loading} onSelectMovie={setActiveTrailerMovie} />
+        <CategoryRow title="Popular Movies" movies={popular} loading={loading} onSelectMovie={setActiveTrailerMovie} />
+        <CategoryRow title="Top Rated" movies={topRated} loading={loading} onSelectMovie={setActiveTrailerMovie} />
+        <CategoryRow title="Trending TV Shows" movies={tvShows} loading={loading} onSelectMovie={setActiveTrailerMovie} />
       </div>
 
       {/* Floating Trailer Modal */}
