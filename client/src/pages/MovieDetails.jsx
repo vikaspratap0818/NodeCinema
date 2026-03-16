@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Play, Plus, Check, X } from 'lucide-react';
 import tmdbApi from '../services/tmdbApi';
 import backendApi from '../services/backendApi';
-import { updateFavorites, updateHistory } from '../features/authSlice';
+import { updateUserInfo } from '../features/authSlice';
 import { MovieDetailSkeleton } from '../components/common/Skeleton';
 import './MovieDetails.css';
 
@@ -22,7 +22,7 @@ const MovieDetails = () => {
   const [showTrailer, setShowTrailer] = useState(false);
 
   // Check if movie is already in favorites
-  const isFavorite = userInfo?.favorites?.some((m) => m.mediaId === id.toString());
+  const isFavorite = userInfo?.favorites?.some((m) => m.mediaId === id?.toString());
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -71,7 +71,7 @@ const MovieDetails = () => {
            };
            
            const historyRes = await backendApi.post('/users/history', historyPayload);
-           dispatch(updateHistory(historyRes.data));
+           dispatch(updateUserInfo(historyRes.data));
         }
 
       } catch (error) {
@@ -96,10 +96,8 @@ const MovieDetails = () => {
         mediaType: isCustom ? 'custom' : 'movie'
       };
       
-      console.log('Sending Favorite Payload:', payload);
       const res = await backendApi.post('/users/favorites', payload);
-      console.log('Received Favorites Response:', res.data);
-      dispatch(updateFavorites(res.data));
+      dispatch(updateUserInfo(res.data));
     } catch (error) {
       console.error('Error toggling favorite:', error);
       console.error('Error Response:', error.response?.data);

@@ -1,31 +1,34 @@
-import React, { useState } from 'react';
+import React, { memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Play, Star, StopCircle, RefreshCw } from 'lucide-react';
+import { Play, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-import backendApi from '../../services/backendApi';
 import './MovieCard.css';
 
-const MovieCard = ({ movie, isCustom = false, onSelect }) => {
+const MovieCard = memo(({ movie, isCustom = false, onSelect }) => {
+  const navigate = useNavigate();
+  
   const posterPath = isCustom 
     ? movie.posterImageUrl 
     : movie.poster_path 
-      ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
+      ? `https://image.tmdb.org/t/p/w342${movie.poster_path}` 
       : (movie.image_url || movie.poster || null);
   const title = isCustom ? movie.title : (movie.title || movie.name);
   const rating = isCustom ? null : (movie.vote_average ? movie.vote_average.toFixed(1) : (movie.user_rating || null));
   const id = isCustom ? movie._id : movie.id;
+  const year = isCustom 
+    ? (movie.releaseDate ? new Date(movie.releaseDate).getFullYear() : 'Unknown')
+    : (movie.release_date ? movie.release_date.substring(0, 4) : movie.first_air_date ? movie.first_air_date.substring(0, 4) : (movie.year || 'Unknown'));
+
+  const detailPath = `/movie/${id}${isCustom ? '?custom=true' : ''}`;
 
   const handlePlayClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // If onSelect is provided (e.g. in a CategoryRow), use it to expand the player
     if (onSelect) {
        onSelect();
     } else {
-       // Otherwise fallback to details page
-       window.location.href = `/movie/${id}${isCustom ? '?custom=true' : ''}`;
+       navigate(detailPath);
     }
   };
 
@@ -36,7 +39,7 @@ const MovieCard = ({ movie, isCustom = false, onSelect }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Link to={`/movie/${id}${isCustom ? '?custom=true' : ''}`} className="movie-card">
+      <Link to={detailPath} className="movie-card">
         <div className="card-image-container">
           {posterPath ? (
             <img src={posterPath} alt={title} className="movie-poster" loading="lazy" />
@@ -62,13 +65,13 @@ const MovieCard = ({ movie, isCustom = false, onSelect }) => {
 
         <div className="card-info">
           <h3 className="movie-title" title={title}>{title}</h3>
-          <p className="movie-year">
-            {isCustom ? new Date(movie.releaseDate).getFullYear() : (movie.year || 'Unknown')}
-          </p>
+          <p className="movie-year">{year}</p>
         </div>
       </Link>
     </motion.div>
   );
-};
+});
+
+MovieCard.displayName = 'MovieCard';
 
 export default MovieCard;
