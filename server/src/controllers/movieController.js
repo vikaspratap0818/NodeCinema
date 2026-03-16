@@ -5,7 +5,8 @@ import Movie from '../models/Movie.js';
 // @access  Public
 export const getMovies = async (req, res) => {
   try {
-    const movies = await Movie.find({}).populate('addedBy', 'username email');
+    // Only return movies that aren't auto-imported stubs
+    const movies = await Movie.find({ genre: { $ne: 'Imported' } }).populate('addedBy', 'username email');
     res.json(movies);
   } catch (error) {
     console.error(error);

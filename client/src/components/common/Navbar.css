@@ -93,11 +93,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s;
+  transition: color 0.2s, transform 0.2s;
+  cursor: pointer;
+  background: transparent;
+  border: none;
 }
 
 .icon-btn:hover {
   color: var(--accent-primary);
+  transform: scale(1.1);
 }
 
 /* Dropdown */
@@ -112,13 +116,19 @@
   gap: 0.5rem;
   color: var(--text-main);
   font-weight: 500;
-  padding: 0.5rem;
-  border-radius: 8px;
-  transition: background-color 0.2s;
+  padding: 0.6rem 1.2rem;
+  border-radius: 30px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
 }
 
 .user-btn:hover {
-  background-color: var(--bg-secondary);
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px var(--accent-glow);
+  transform: translateY(-2px);
 }
 
 .dropdown-content {
@@ -145,18 +155,22 @@
 
 .dropdown-content a, .dropdown-content button {
   color: var(--text-main);
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 1.2rem;
   text-decoration: none;
   display: block;
   width: 100%;
   text-align: left;
   font-size: 0.9rem;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background: transparent;
+  border: none;
 }
 
 .dropdown-content a:hover, .dropdown-content button:hover {
-  background-color: var(--bg-color);
+  background-color: rgba(255, 255, 255, 0.05);
   color: var(--accent-primary);
+  padding-left: 1.5rem; /* Slide effect */
 }
 
 .logout-btn {
@@ -164,6 +178,10 @@
   align-items: center;
   gap: 0.5rem;
   color: #ef4444 !important; /* Red for logout */
+}
+
+.logout-btn:hover {
+  color: #f87171 !important;
 }
 
 .auth-links .login-link {

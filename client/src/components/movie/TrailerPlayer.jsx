@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import watchmodeApi from '../../services/watchmodeApi';
+import tmdbApi from '../../services/tmdbApi';
 import backendApi from '../../services/backendApi';
 import { RefreshCw } from 'lucide-react';
 import './TrailerPlayer.css';
@@ -21,25 +21,32 @@ const TrailerPlayer = ({ movie, isCustom }) => {
         const id = isCustom ? movie._id : movie.id;
         let tKey = null;
 
-        if (isCustom) {
+         if (isCustom) {
            const res = await backendApi.get(`/movies/${id}`);
            const urlObj = new URL(res.data.trailerYouTubeLink);
            tKey = urlObj.searchParams.get('v') || res.data.trailerYouTubeLink.split('/').pop();
-        } else {
-           const res = await watchmodeApi.get(`/title/${id}/details/`);
-           if (res.data?.trailer) {
+         } else {
+           try {
+             let vids = [];
              try {
-                if (res.data.trailer.includes('youtube.com') || res.data.trailer.includes('youtu.be')) {
-                  const ytUrl = new URL(res.data.trailer);
-                  tKey = ytUrl.searchParams.get('v') || res.data.trailer.split('/').pop();
+                const res = await tmdbApi.get(`/movie/${id}/videos`);
+                vids = res.data.results || [];
+             } catch (err) {
+                if (err.response && err.response.status === 404) {
+                   const tvRes = await tmdbApi.get(`/tv/${id}/videos`);
+                   vids = tvRes.data.results || [];
                 } else {
-                  tKey = res.data.trailer.split('/').pop();
+                   throw err;
                 }
-             } catch(err) {
-                tKey = null;
              }
+             const trailer = vids.find(v => v.type === 'Trailer' && v.site === 'YouTube') || vids.find(v => v.site === 'YouTube');
+             if (trailer) {
+                tKey = trailer.key;
+             }
+           } catch(err) {
+              tKey = null;
            }
-        }
+         }
 
         if (tKey) {
            setTrailerKey(tKey.replace('watch?v=', ''));

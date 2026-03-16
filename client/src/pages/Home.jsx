@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Play, Info, X } from 'lucide-react';
 import { motion } from 'framer-motion';
-import watchmodeApi from '../services/watchmodeApi';
+import tmdbApi from '../services/tmdbApi';
 import { fetchCustomMovies } from '../features/movieSlice';
 import CategoryRow from '../components/movie/CategoryRow';
 import TrailerPlayer from '../components/movie/TrailerPlayer';
@@ -32,10 +32,10 @@ const Home = () => {
       setLoading(true);
       try {
         const [trendingRes, popularRes, topRatedRes, tvRes] = await Promise.all([
-          watchmodeApi.get('/autocomplete-search/', { params: { search_value: 'Marvel', search_type: 1 } }),
-          watchmodeApi.get('/autocomplete-search/', { params: { search_value: 'Batman', search_type: 1 } }),
-          watchmodeApi.get('/autocomplete-search/', { params: { search_value: 'Harry Potter', search_type: 1 } }),
-          watchmodeApi.get('/autocomplete-search/', { params: { search_value: 'Star Wars', search_type: 1 } })
+          tmdbApi.get('/trending/movie/day'),
+          tmdbApi.get('/movie/popular'),
+          tmdbApi.get('/movie/top_rated'),
+          tmdbApi.get('/trending/tv/day')
         ]);
 
         const trendingData = trendingRes.data.results || [];
@@ -76,8 +76,8 @@ const Home = () => {
           <>
             <div className="hero-backdrop">
               <img 
-                src={heroMovie.image_url ? heroMovie.image_url.replace('w185', 'original') : "https://via.placeholder.com/1200x500"} 
-                alt={heroMovie.name} 
+                src={heroMovie.backdrop_path ? `https://image.tmdb.org/t/p/original${heroMovie.backdrop_path}` : "https://via.placeholder.com/1200x500"} 
+                alt={heroMovie.title || heroMovie.name} 
               />
               <div className="hero-gradient"></div>
             </div>
@@ -89,7 +89,7 @@ const Home = () => {
                 transition={{ duration: 0.8 }}
                 className="hero-info"
               >
-                <h1 className="hero-title">{heroMovie.name}</h1>
+                <h1 className="hero-title">{heroMovie.title || heroMovie.name}</h1>
                 <p className="hero-overview">
                   Featured Movie - See more details to read the full plot.
                 </p>
@@ -135,9 +135,9 @@ const Home = () => {
             </button>
             <div className="trailer-modal-body">
                <div className="trailer-modal-info">
-                  <h2>{activeTrailerMovie.name || activeTrailerMovie.title}</h2>
+                  <h2>{activeTrailerMovie.title || activeTrailerMovie.name}</h2>
                   <p className="trailer-modal-overview">
-                    {activeTrailerMovie.plot_overview || activeTrailerMovie.description || "Loading description..."}
+                    {activeTrailerMovie.overview || "Loading description..."}
                   </p>
                   <button 
                     className="btn-secondary" 

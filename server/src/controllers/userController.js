@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import Movie from '../models/Movie.js';
 
 // @desc    Get all users
 // @route   GET /api/users
@@ -76,6 +77,28 @@ export const toggleFavorite = async (req, res) => {
     }
 
     const safeMediaId = mediaId.toString();
+
+    // Optionally mirror TMDB entries locally if they are not Custom movies
+    if (mediaType !== 'custom') {
+       let existingMovie = await Movie.findOne({ customMovieId: safeMediaId });
+       if (!existingMovie) {
+          try {
+             await Movie.create({
+                title: title,
+                description: "Imported from favorites", // Placeholder since we only get light payload
+                posterImageUrl: posterPath || "https://via.placeholder.com/500x750",
+                releaseDate: new Date(), // placeholder
+                trailerYouTubeLink: "https://youtube.com", // placeholder
+                genre: ["Imported"],
+                category: mediaType === 'tv' ? 'TV Show' : 'Movie',
+                customMovieId: safeMediaId,
+                addedBy: req.user._id // We assume the user acting as "importer"
+             });
+          } catch(err) {
+             console.error('Failed to create local copy for favorite:', err.message);
+          }
+       }
+    }
 
     const user = await User.findById(req.user._id);
 

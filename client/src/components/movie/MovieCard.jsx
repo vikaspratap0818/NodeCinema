@@ -2,14 +2,18 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Play, Star, StopCircle, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
-import watchmodeApi from '../../services/watchmodeApi';
+
 import backendApi from '../../services/backendApi';
 import './MovieCard.css';
 
 const MovieCard = ({ movie, isCustom = false, onSelect }) => {
-  const posterPath = isCustom ? movie.posterImageUrl : movie.image_url || movie.poster || null;
-  const title = isCustom ? movie.title : (movie.name || movie.title);
-  const rating = isCustom ? null : movie.user_rating ? movie.user_rating : null;
+  const posterPath = isCustom 
+    ? movie.posterImageUrl 
+    : movie.poster_path 
+      ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
+      : (movie.image_url || movie.poster || null);
+  const title = isCustom ? movie.title : (movie.title || movie.name);
+  const rating = isCustom ? null : (movie.vote_average ? movie.vote_average.toFixed(1) : (movie.user_rating || null));
   const id = isCustom ? movie._id : movie.id;
 
   const handlePlayClick = (e) => {

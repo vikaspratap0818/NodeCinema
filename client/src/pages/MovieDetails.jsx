@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Play, Plus, Check, X } from 'lucide-react';
-import watchmodeApi from '../services/watchmodeApi';
+import tmdbApi from '../services/tmdbApi';
 import backendApi from '../services/backendApi';
 import { updateFavorites, updateHistory } from '../features/authSlice';
 import { MovieDetailSkeleton } from '../components/common/Skeleton';
@@ -39,12 +39,23 @@ const MovieDetails = () => {
           const urlObj = new URL(movieData.trailerYouTubeLink);
           tKey = urlObj.searchParams.get('v') || movieData.trailerYouTubeLink.split('/').pop();
         } else {
-          // Watchmode Movie
-          const res = await watchmodeApi.get(`/title/${id}/details/`);
-          movieData = res.data;
+          // TMDB Movie/TV
+          try {
+            const res = await tmdbApi.get(`/movie/${id}`, { params: { append_to_response: 'videos,credits' } });
+            movieData = res.data;
+          } catch (err) {
+            if (err.response && err.response.status === 404) {
+               const tvRes = await tmdbApi.get(`/tv/${id}`, { params: { append_to_response: 'videos,credits' } });
+               movieData = tvRes.data;
+               movieData.title = movieData.name; // tv shows use name
+            } else {
+               throw err;
+            }
+          }
           
-          // Watchmode doesn't always provide raw trailer keys easily in standard details
-          tKey = movieData.trailer || null;
+          const vids = movieData.videos?.results || [];
+          const trailer = vids.find(v => v.type === 'Trailer' && v.site === 'YouTube') || vids.find(v => v.site === 'YouTube');
+          tKey = trailer ? trailer.key : null;
         }
 
         setMovie(movieData);
@@ -55,7 +66,7 @@ const MovieDetails = () => {
            const historyPayload = {
              mediaId: id.toString(),
              title: isCustom ? movieData.title : (movieData.title || movieData.name),
-             posterPath: isCustom ? movieData.posterImageUrl : movieData.poster,
+             posterPath: isCustom ? movieData.posterImageUrl : (movieData.poster_path ? `https://image.tmdb.org/t/p/w500${movieData.poster_path}` : ''),
              mediaType: isCustom ? 'custom' : 'movie'
            };
            
@@ -81,7 +92,7 @@ const MovieDetails = () => {
       const payload = {
         mediaId: id.toString(),
         title: isCustom ? movie.title : (movie.title || movie.name),
-        posterPath: isCustom ? movie.posterImageUrl : movie.poster,
+        posterPath: isCustom ? movie.posterImageUrl : (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : ''),
         mediaType: isCustom ? 'custom' : 'movie'
       };
       
@@ -99,16 +110,21 @@ const MovieDetails = () => {
   if (!movie) return <div className="container" style={{paddingTop: '100px'}}><h2>Movie not found.</h2></div>;
 
   const title = movie.title || movie.name;
-  const overview = movie.description || movie.plot_overview || 'Description not available.';
-  const backdrop = isCustom ? movie.posterImageUrl : movie.poster !== 'N/A' ? movie.poster : '';
-  const poster = isCustom ? movie.posterImageUrl : movie.poster !== 'N/A' ? movie.poster : '';
+  const overview = movie.overview || movie.description || movie.plot_overview || 'Description not available.';
+  
+  const backdropPath = movie.backdrop_path || movie.poster_path;
+  const backdrop = isCustom ? movie.posterImageUrl : (backdropPath ? `https://image.tmdb.org/t/p/original${backdropPath}` : '');
+  const poster = isCustom ? movie.posterImageUrl : (movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '');
 
-  const rating = isCustom ? null : movie.us_rating ? `Rated ${movie.us_rating}` : movie.user_rating ? `${movie.user_rating}/10 Match` : null;
+  const rating = isCustom ? null : (movie.vote_average ? `${movie.vote_average.toFixed(1)}/10 Rating` : null);
   const year = isCustom 
       ? new Date(movie.releaseDate).getFullYear() 
-      : movie.year;
+      : (movie.release_date ? movie.release_date.substring(0, 4) : movie.first_air_date ? movie.first_air_date.substring(0, 4) : 'Unknown');
       
-  const runtimeMin = isCustom ? movie.runtime : movie.runtime_minutes || null;
+  const runtimeMin = isCustom ? movie.runtime : (movie.runtime || (movie.episode_run_time && movie.episode_run_time[0]) || null);
+  
+  const director = !isCustom && movie.credits ? movie.credits.crew.find(c => c.job === 'Director') : null;
+  const cast = !isCustom && movie.credits ? movie.credits.cast.slice(0, 5) : [];
 
   return (
     <div className="md-page">
@@ -134,6 +150,13 @@ const MovieDetails = () => {
 
           <p className="md-overview">{overview}</p>
 
+          {!isCustom && (
+             <div className="md-credits" style={{ marginBottom: '1.5rem', color: '#ccc' }}>
+               {director && <p style={{marginBottom: '0.2rem'}}><strong>Director:</strong> {director.name}</p>}
+               {cast.length > 0 && <p><strong>Cast:</strong> {cast.map(c => c.name).join(', ')}</p>}
+             </div>
+          )}
+
           <div className="md-actions">
             <button 
                className="md-btn-play" 
@@ -147,10 +170,10 @@ const MovieDetails = () => {
             </button>
           </div>
 
-          {!isCustom && movie.genre_names && movie.genre_names.length > 0 && (
+          {!isCustom && movie.genres && movie.genres.length > 0 && (
             <div className="md-cast">
               <h3>Genres</h3>
-              <p>{movie.genre_names.join(', ')}</p>
+              <p>{movie.genres.map(g => g.name).join(', ')}</p>
             </div>
           )}
         </div>

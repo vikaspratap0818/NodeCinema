@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import watchmodeApi from '../services/watchmodeApi';
+import tmdbApi from '../services/tmdbApi';
 import useDebounce from '../hooks/useDebounce';
 import MovieCard from '../components/movie/MovieCard';
 import { MovieGridSkeleton } from '../components/common/Skeleton';
@@ -56,15 +56,24 @@ const Search = () => {
         // Depending on if their autocomplete is actually the only way to search
         // We will try to pass `page` to the autocomplete, or use the general /search/
         // Watchmode autocomplete provides image_url, whereas /search/ does not.
-        const res = await watchmodeApi.get('/autocomplete-search/', {
-          params: { search_value: debouncedQuery, search_type: 1 }
+        const res = await tmdbApi.get('/search/multi', {
+          params: { query: debouncedQuery, page: page }
         });
         
         let fetchedData = res.data.results || [];
+        fetchedData = fetchedData.filter(item => item.media_type !== 'person');
 
-        // We will sort by Year if requested.
+        fetchedData = fetchedData.map(item => ({
+            ...item,
+            year: item.release_date ? item.release_date.substring(0, 4) : item.first_air_date ? item.first_air_date.substring(0, 4) : 'Unknown'
+        }));
+
         if (sortOption !== 'relevance') {
-          fetchedData.sort((a, b) => parseInt(b.year) - parseInt(a.year));
+          fetchedData.sort((a, b) => {
+             const yearA = parseInt(a.year) || 0;
+             const yearB = parseInt(b.year) || 0;
+             return yearB - yearA;
+          });
         }
 
         setResults(prev => {
@@ -72,8 +81,7 @@ const Search = () => {
           return [...prev, ...fetchedData];
         });
         
-        // If we got exactly 10 or 20 items, there might be more. Standard size is usually 10 or more.
-        if (fetchedData.length > 0 && fetchedData.length % 10 === 0) {
+        if (page < res.data.total_pages) {
            setHasMore(true);
         } else {
            setHasMore(false);
